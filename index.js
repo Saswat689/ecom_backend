@@ -33,9 +33,9 @@ app.use(helmet());
 //dotenv
 const environment = dotenv.config()
 
-if(environment.error) {
-	throw new Error("Error when loading environment variables")
-}
+// if(environment.error) {
+// 	throw new Error("Error when loading environment variables")
+// }
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('DB connected'))
