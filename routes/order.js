@@ -100,34 +100,42 @@ router.get("/",verifyTokenAndAdmin,async (req,res) => {
 	}
 })
 
-// get monthly income
-router.get("/income",verifyTokenAndAdmin,async (req,res) => {
-	const productId = req.query.pid;
-	const date = new Date(); //sep
-	const lastMonth = new Date(date.setMonth(date.getMonth() - 1)) //aug
-	const previousMonth = new Date(date.setMonth(lastMonth.getMonth() - 1)) //jul
+// GET MONTHLY INCOME
 
-	try{
-		const income = await Order.aggregate([
-			{ $match: { createdAt: { $gte: previousMonth }, ...(productId && (
-				products: { $elemMatch: { productId } } //if there is an id in query than match that product as well
-			)) } },
-			{
-				$project: {
-					month: { $month: "$createdAt" },
-					sales: "$amount"
-				}
-			},
-			{
-				$group: {
-					_id: "$month",
-					total: { $sum: "$sales" }
-				}
-			}
-		])
-	} catch (err) {
-		res.status(500).json(err)
-	}
-})
+router.get("/income", verifyTokenAndAdmin, async (req, res) => {
+  const productId = req.query.pid;
+  const date = new Date();
+  const lastMonth = new Date(date.setMonth(date.getMonth() - 1));
+  const previousMonth = new Date(new Date().setMonth(lastMonth.getMonth() - 1));
+
+  try {
+    const income = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: previousMonth },
+          ...(productId && {
+            products: { $elemMatch: { productId } },
+          }),
+        },
+      },
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+          sales: "$amount",
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: "$sales" },
+        },
+      },
+    ]);
+    res.status(200).json(income);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 
 module.exports = router;
